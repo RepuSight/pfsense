@@ -117,7 +117,51 @@ $radiusctx = 'first';
 if ($_POST['auth_user2'])
 	$radiusctx = 'second';
 
-if ($_POST['logout_id']) {
+if ($_REQUEST['logout'])
+{
+	/* read database */
+    $result = captiveportal_read_db("WHERE ip = '{$clientip}'");
+
+    /* find entry sessionid */
+    if (!empty($result)) {
+            foreach ($result as $cpentry) {
+                if (!empty($cpentry[5]))
+                    $sessionid = $cpentry[5];
+            }
+            unset($result);
+    }
+	
+	if (strnatcasecmp($_REQUEST['logout'], "DEBUG") == 0) {
+		$attt = captiveportal_get_last_activity($clientip);
+
+		echo <<<EOD
+<HTML>
+<HEAD><TITLE>Disconnecting...</TITLE></HEAD>
+<BODY BGCOLOR="#72E372">
+<SPAN STYLE="color: #ffffff; font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif; font-size: 11px;">
+<B>You have been disconnected.</B>
+</SPAN>
+<span>
+<p>$cpzone</p>
+<p>$orig_host</p>
+<p>$clientip</p>
+<p>$ourhostname</p>
+<p>$clientmac</p>
+<p>$sessionid</p>
+<p>$attt</p>
+</span>
+</BODY>
+</HTML>
+
+EOD;
+	}
+	else 
+		/* display captive portal page */
+		portal_reply_page($redirurl, "login",null,$clientmac,$clientip);
+		
+	captiveportal_disconnect_client($sessionid);
+	
+} else if ($_POST['logout_id']) {
 	echo <<<EOD
 <HTML>
 <HEAD><TITLE>Disconnecting...</TITLE></HEAD>
